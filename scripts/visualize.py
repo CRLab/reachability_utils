@@ -5,6 +5,7 @@ import world_manager.srv
 import rospkg
 import os
 from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
+import graspit_commander
 
 wm_add_service_proxy = rospy.ServiceProxy("/world_manager/add_object",
                                            world_manager.srv.AddObject)
@@ -18,7 +19,7 @@ mesh_filepath = os.path.join(meshdir, mesh_filepath)
 
 pose_stamped = PoseStamped()
 pose_stamped.header.frame_id = "base_link"
-pose_stamped.pose = Pose(Point(0,0,0), Quaternion(0,0,0,1))
+pose_stamped.pose = Pose(Point(1,1,1), Quaternion(0,0,0,1))
 
 wm_add_service_proxy(mesh_name, mesh_filepath, pose_stamped)
 
@@ -46,4 +47,5 @@ def get_grasp_from_graspit(
     pre_grasps = result.grasps
     unchecked_for_reachability_grasps = gl.evaluatePreGrasps(pre_grasps, pre_grasp_dofs=(4,))
 
-return unchecked_for_reachability_grasps
+    return unchecked_for_reachability_grasps
+    
