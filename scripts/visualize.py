@@ -30,7 +30,7 @@ IPython.embed()
 
 def get_grasp_from_graspit(
     model_name,
-    mesh_path,
+    mesh_path=mesh_filepath,
     robot="fetch_gripper",
     obstacle="table"):
 
@@ -41,11 +41,12 @@ def get_grasp_from_graspit(
     gc.importGraspableBody(mesh_path)
 
     result = gc.planGrasps()
+
     # gl = GridSampleClient()
     # result = gl.computePreGrasps(20, 1)
+    # pre_grasps = result.grasps
+    # result = gl.evaluatePreGrasps(pre_grasps, pre_grasp_dofs=(4,))
 
-    pre_grasps = result.grasps
-    unchecked_for_reachability_grasps = gl.evaluatePreGrasps(pre_grasps, pre_grasp_dofs=(4,))
-
-    return unchecked_for_reachability_grasps
+    return result
+    
     

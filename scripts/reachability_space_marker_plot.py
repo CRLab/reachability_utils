@@ -69,19 +69,32 @@ def display_reachability_space(publisher, filename, frame_id="object_0"):
 	publisher.publish(ma)
 
 
-def display_grasps_approach(publisher, grasps, frame_id="object_0"):
+
+def display_grasps_approach():
+# def display_grasps_approach(publisher, grasps, frame_id="object_0"):
+	publisher = rospy.Publisher("marker_topic", visualization_msgs.msg.MarkerArray, queue_size=100000)
+	frame_id="object_0"
+
+	import visualize
+	grasp_results = visualize.get_grasp_from_graspit(
+	    model_name="object_0")
+	grasps = grasp_results.grasps
 	
 	ma = visualization_msgs.msg.MarkerArray()
 
 	for count, grasp in enumerate(grasps):
 
 		p = grasp.pose
-		color=(1,0,0,1)					
+		color=(0,1,0,1)
 
 		marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
 		ma.markers.append(marker)
 			
 	publisher.publish(ma)
+	import IPython
+	IPython.embed()
+	assert False
+
 
 
 def load_sdf_space(processed_file_name):
@@ -137,6 +150,13 @@ def display_sdf_space():
 	import IPython
 	IPython.embed()
 	assert False
+
+
+####################
+##### Display grasps
+rospy.init_node("marker_pub")
+display_grasps_approach()
+
 
 
 ####################
