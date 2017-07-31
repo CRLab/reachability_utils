@@ -7,5 +7,5 @@
 
 ```bash
  mkdir data
- rosrun reachability_utils reachability_space_marker_plot.py
+ rosrun reachability_utils visualize.py
 ```

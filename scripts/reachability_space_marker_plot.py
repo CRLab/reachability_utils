@@ -30,8 +30,10 @@ def make_marker(m_id, pose, frame_id="base_link",
 	return m
 
 
-def display_reachability_space(publisher, filename, frame_id="object_0"):
-	
+def display_reachability_space(filename, marker_topic="marker_topic", frame_id="object_0"):
+
+	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
+		
 	data_np = np.loadtxt(filename)
 	ma = visualization_msgs.msg.MarkerArray()
 
@@ -66,36 +68,8 @@ def display_reachability_space(publisher, filename, frame_id="object_0"):
 			marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
 			ma.markers.append(marker)
 			
+	rospy.sleep(1)
 	publisher.publish(ma)
-
-
-
-def display_grasps_approach():
-# def display_grasps_approach(publisher, grasps, frame_id="object_0"):
-	publisher = rospy.Publisher("marker_topic", visualization_msgs.msg.MarkerArray, queue_size=100000)
-	frame_id="object_0"
-
-	import visualize
-	grasp_results = visualize.get_grasp_from_graspit(
-	    model_name="object_0")
-	grasps = grasp_results.grasps
-	
-	ma = visualization_msgs.msg.MarkerArray()
-
-	for count, grasp in enumerate(grasps):
-
-		p = grasp.pose
-		color=(0,1,0,1)
-
-		marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
-		ma.markers.append(marker)
-			
-	publisher.publish(ma)
-	import IPython
-	IPython.embed()
-	assert False
-
-
 
 def load_sdf_space(processed_file_name):
 
@@ -119,10 +93,7 @@ def load_sdf_space(processed_file_name):
 
 	return sdf_data
 
-def display_sdf_space():
-
-	folder = rospkg.RosPack().get_path('reachability_utils') + '/data/'
-	processed_file_name = os.path.join(folder, 'processed/reach_data')
+def display_sdf_space(processed_file_name):
 
 	sdf_data = load_sdf_space(processed_file_name)
 	sdf_data = np.array(sdf_data)
@@ -145,36 +116,39 @@ def display_sdf_space():
 		marker = make_marker(m_id=count, pose=p, frame_id=frame_id, 
 			color=color, m_type=m_type, scale=scale)
 		ma.markers.append(marker)
-		
+	
+	rospy.sleep(1)
 	publisher.publish(ma)
-	import IPython
-	IPython.embed()
-	assert False
-
-
-####################
-##### Display grasps
-rospy.init_node("marker_pub")
-display_grasps_approach()
 
 
 
-####################
-##### Display sdf
-rospy.init_node("marker_pub")
-display_sdf_space()
+def display_grasps_approach(grasps, frame_id="object_0"):
+# def display_grasps_approach(publisher, grasps, frame_id="object_0"):
+	publisher = rospy.Publisher("marker_topic", visualization_msgs.msg.MarkerArray, queue_size=100000)
+	frame_id="object_0"
+
+	# import visualize
+	# grasp_results = visualize.get_grasp_from_graspit(
+	#     model_name="object_0")
+	# grasps = grasp_results.grasps
+	
+	ma = visualization_msgs.msg.MarkerArray()
+
+	for count, grasp in enumerate(grasps):
+
+		p = grasp.pose
+		color=(1,1,0,1)
+
+		marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
+		ma.markers.append(marker)
+	
+	rospy.sleep(1)
+	publisher.publish(ma)
 
 
-
-####################
-##### Display original reachability space
-rospy.init_node("marker_pub")
-pub = rospy.Publisher("marker_topic", visualization_msgs.msg.MarkerArray, queue_size=100000)
-filename = rospkg.RosPack().get_path('reachability_utils') + '/data/reachability_data_.csv'
-
-display_reachability_space(publisher=pub, filename=filename, frame_id="object_0")
+# # https://stackoverflow.com/questions/2782647/how-to-get-yaw-pitch-and-roll-from-a-3d-vector
+# # https://stackoverflow.com/questions/1568568/how-to-convert-euler-angles-to-directional-vector
 
 
-
-# https://stackoverflow.com/questions/2782647/how-to-get-yaw-pitch-and-roll-from-a-3d-vector
-# https://stackoverflow.com/questions/1568568/how-to-convert-euler-angles-to-directional-vector
+if __name__ == '__main__':
+	pass
