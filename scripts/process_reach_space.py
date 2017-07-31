@@ -57,14 +57,20 @@ def process_reachability_data(reach_data_raw, processed_file_name):
 	data_ND.tofile(open(processed_file_name+'.full', 'w'))
 	data_ND_sdf.tofile(open(processed_file_name+'.sdf', 'w'))
 
-	save_array(processed_file_name+'.step', stepSize)
+	save_array(processed_file_name+'.step', step_size)
 	save_array(processed_file_name+'.mins', mins)
 	save_array(processed_file_name+'.dims', dims)
 
+	data_ND_sdf2 = np.fromfile(processed_file_name+'.sdf', dtype=float)
+	data_ND_sdf2 = data_ND_sdf2.reshape(dims)
+	np.max(data_ND_sdf2-data_ND_sdf)
 
+	# import IPython
+	# IPython.embed()
 
 	# check that data loaded in c++ matches
-	print "data_ND_full_sdf[2,1,0,0,10,1]:\t", data_ND_full_sdf[2,1,0,0,10,1]
+	# print "data_ND_full_sdf[2,1,0,0,10,1]:\t", data_ND__sdf[2,1,0,0,10,1]
+	print "data_ND_full_sdf[2,1,0]:\t", data_ND_sdf[2,1,0]
 
 
 
