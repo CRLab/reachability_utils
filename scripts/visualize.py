@@ -77,7 +77,7 @@ if __name__ == '__main__':
 	#     mesh_path=mesh_filepath)
 	# grasps = grasp_results.grasps
 
-	# display_grasps_approach(grasps, frame_id="object_0")
+	# display_grasps_approach(grasps, marker_topic="marker_topic", frame_id="object_0")
 
 
 

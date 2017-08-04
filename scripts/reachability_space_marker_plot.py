@@ -93,14 +93,14 @@ def load_sdf_space(processed_file_name):
 
 	return sdf_data
 
-def display_sdf_space(processed_file_name):
+def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
 
 	sdf_data = load_sdf_space(processed_file_name)
 	sdf_data = np.array(sdf_data)
 	min_sdf = np.min(sdf_data[:,-1])
 	max_sdf = np.max(sdf_data[:,-1])
 
-	publisher = rospy.Publisher("marker_topic", visualization_msgs.msg.MarkerArray, queue_size=100000)
+	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
 	frame_id="object_0"
 	
 	ma = visualization_msgs.msg.MarkerArray()
@@ -122,15 +122,8 @@ def display_sdf_space(processed_file_name):
 
 
 
-def display_grasps_approach(grasps, frame_id="object_0"):
-# def display_grasps_approach(publisher, grasps, frame_id="object_0"):
-	publisher = rospy.Publisher("marker_topic", visualization_msgs.msg.MarkerArray, queue_size=100000)
-	frame_id="object_0"
-
-	# import visualize
-	# grasp_results = visualize.get_grasp_from_graspit(
-	#     model_name="object_0")
-	# grasps = grasp_results.grasps
+def display_grasps_approach(grasps, marker_topic="marker_topic", frame_id="object_0"):
+	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
 	
 	ma = visualization_msgs.msg.MarkerArray()
 
