@@ -5,6 +5,7 @@ import rospkg
 import datetime
 import os
 import skfmm
+import ConfigParser
 
 def generate_reachability_space(reach_data_location):
 
@@ -98,6 +99,20 @@ def process_reachability_data(reach_data_raw, processed_file_name):
 	print "data_ND_full_sdf[2,1,0]:\t", data_ND_sdf[2,1,0]
 
 
+def generate_graspit_config_file(config_args, reachability_config_filename):
+
+    config = ConfigParser.ConfigParser()
+    section_name = 'reachability_config'
+    config.add_section(section_name)
+
+    for key in config_args.keys():
+		config.set(section_name, key, config_args[key])
+
+    cfgfile = open(reachability_config_filename,'w')
+    config.write(cfgfile)
+    cfgfile.close()
+
+
 if __name__ == '__main__':
 
 	# generate custom reachability space
@@ -114,3 +129,25 @@ if __name__ == '__main__':
 	reach_data_raw = os.path.join(reach_data_location, reach_data_raw)
 	processed_file_name = os.path.join(reach_data_location, 'processed/reach_data')
 	process_reachability_data(reach_data_raw, processed_file_name)
+
+	# set object to reference frame transform
+	object_pose_in_reference_frame = np.eye(4)
+	obj_pose_filename = 'object_pose_in_reference_frame.csv'
+	obj_pose_filename = os.path.join(reach_data_location, obj_pose_filename)
+	np.savetxt(obj_pose_filename, object_pose_in_reference_frame, fmt='%1.6f', delimiter=" ")
+
+	# create config file for graspit energy plugin
+	config_args = {}
+	config_args['reachability_data_filename'] = processed_file_name
+	config_args['object_pose_in_reference_frame'] = obj_pose_filename
+	config_args['log_energy_flag'] = 'false' #False
+	config_args['annealing_data_log_file'] = processed_file_name
+	config_args['contact_energy_coeff'] = 0.1
+	config_args['potential_energy_coeff'] = 0.1
+	config_args['reachability_energy_coeff'] = 0.1
+
+	reachability_config_filename = rospkg.RosPack().get_path('reachability_utils') + '/config/'
+	if not os.path.exists(reachability_config_filename):
+		os.makedirs(reachability_config_filename)
+	reachability_config_filename += 'reachability.conf'
+	generate_graspit_config_file(config_args, reachability_config_filename)
