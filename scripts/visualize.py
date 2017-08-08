@@ -22,7 +22,8 @@ def get_grasp_from_graspit(
 	gc.importRobot(robot)
 	gc.importGraspableBody(mesh_path)
 
-	result = gc.planGrasps(max_steps=40000)
+	result = gc.planGrasps(search_energy="REACHABILITY_ENERGY", max_steps=70000)
+	# result = gc.planGrasps(max_steps=70000)
 
 	# gl = GridSampleClient()
 	# result = gl.computePreGrasps(20, 1)

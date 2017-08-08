@@ -28,7 +28,8 @@ def generate_reachability_space(reach_data_location):
 		for y in ys:
 			for z in zs:
 				reachable = 0
-				if np.allclose([x,y,z],[0.3,0.3,0.3]):
+				reachability_list = [[0.3,0.3,0.3],[-0.3,-0.3,0.3]]
+				if np.any([np.allclose([x,y,z],p) for p in reachability_list]):
 					reachable = 1
 
 				data = ("{:6d} " + "{:.1f} "*3 + "{:1d} \n").format(count, x, y, z, reachable)
@@ -91,12 +92,28 @@ def process_reachability_data(reach_data_raw, processed_file_name):
 	data_ND_sdf2 = data_ND_sdf2.reshape(dims)
 	np.max(data_ND_sdf2-data_ND_sdf)
 
-	# import IPython
-	# IPython.embed()
-
 	# check that data loaded in c++ matches
 	# print "data_ND_full_sdf[2,1,0,0,10,1]:\t", data_ND__sdf[2,1,0,0,10,1]
 	print "data_ND_full_sdf[2,1,0]:\t", data_ND_sdf[2,1,0]
+
+	# import IPython
+	# IPython.embed()
+
+	# compute reachability statistics for simulated annealing f(x) = m(x - c)
+	alpha = 95
+	c = np.percentile(data_ND_sdf, 100-alpha)
+	gamma = 0.99
+	m = -np.log(1/gamma - 1) / (np.max(data_ND_sdf) - c)
+
+	print "reachability constants: m: {} \t c:{}".format(m, c)
+
+	sdf_stats = {}
+	sdf_stats['min'] = np.min(data_ND_sdf)
+	sdf_stats['max'] = np.max(data_ND_sdf)
+	sdf_stats['alpha_percentile'] = np.percentile(data_ND_sdf, alpha)
+	sdf_stats['inv_alpha_percentile'] = np.percentile(data_ND_sdf, 100-alpha)
+	print "reachability constants: \n min value: {} \n max value: {}".format(sdf_stats['min'], sdf_stats['max'])
+
 
 
 def generate_graspit_config_file(config_args, reachability_config_filename):
