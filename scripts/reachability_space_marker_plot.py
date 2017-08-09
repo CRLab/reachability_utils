@@ -39,8 +39,8 @@ def display_reachability_space(filename, marker_topic="marker_topic", frame_id="
 
 	for count, data in enumerate(data_np):
 
-		if True:
-		# if count % 5 == 0:
+		# if True:
+		if count % 25 == 0:
 			rospy.sleep(0.001)
 
 			x = data[1]
@@ -62,6 +62,7 @@ def display_reachability_space(filename, marker_topic="marker_topic", frame_id="
 				color=(0,1,0,1)
 				print "reachable point"
 			else:
+				continue
 				color=(1,0,0,1)
 					
 
@@ -93,7 +94,7 @@ def load_sdf_space(processed_file_name):
 
 	return sdf_data
 
-def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
+def display_sdf_space_old(processed_file_name, marker_topic="marker_topic"):
 
 	sdf_data = load_sdf_space(processed_file_name)
 	sdf_data = np.array(sdf_data)
@@ -110,7 +111,47 @@ def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
 	for count, data in enumerate(sdf_data):
 
 		p = Pose(Point(data[1],data[2],data[3]), Quaternion(0,0,0,1))
-		r = (data[4]-min_sdf) / (max_sdf-min_sdf)
+		r = (data[-1]-min_sdf) / (max_sdf-min_sdf)
+		color=(r,0,1-r,1)
+
+		marker = make_marker(m_id=count, pose=p, frame_id=frame_id,
+			color=color, m_type=m_type, scale=scale)
+		ma.markers.append(marker)
+
+	rospy.sleep(1)
+	publisher.publish(ma)
+
+def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
+
+	sdf_data = load_sdf_space(processed_file_name)
+	sdf_data = np.array(sdf_data)
+	min_sdf = np.min(sdf_data[:,-1])
+	max_sdf = np.max(sdf_data[:,-1])
+
+	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
+	frame_id="object_0"
+
+	ma = visualization_msgs.msg.MarkerArray()
+	scale = (.03,.03,.03)
+	m_type = visualization_msgs.msg.Marker.CUBE
+
+	is_6d_space = len(sdf_data[0])>6
+	if is_6d_space:
+		scale=(.1,.01,.01)
+		m_type=visualization_msgs.msg.Marker.ARROW
+
+	for count, data in enumerate(sdf_data):
+		if is_6d_space and not count % 25 == 0:
+			continue
+
+		if is_6d_space:
+			rot = PyKDL.Rotation.RPY(data[4], data[5], data[6])
+			quarternion = rot.GetQuaternion()
+		else:
+			quarternion = (0,0,0,1)
+
+		p = Pose(Point(data[1],data[2],data[3]), Quaternion(*quarternion))
+		r = (data[-1]-min_sdf) / (max_sdf-min_sdf)
 		color=(r,0,1-r,1)
 
 		marker = make_marker(m_id=count, pose=p, frame_id=frame_id, 
@@ -119,6 +160,7 @@ def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
 	
 	rospy.sleep(1)
 	publisher.publish(ma)
+
 
 
 

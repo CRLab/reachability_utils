@@ -5,6 +5,7 @@ import rospkg
 import datetime
 import os
 import skfmm
+import math
 import ConfigParser
 
 def generate_reachability_space(reach_data_location):
@@ -36,6 +37,52 @@ def generate_reachability_space(reach_data_location):
 
 				fd.write(data)
 				count += 1
+	fd.close()
+
+
+def generate_reachability_space_6D(reach_data_location):
+
+	half_cube_size = 0.5
+	grid_size = 0.2
+	xs = np.arange(-half_cube_size, half_cube_size+0.0005, grid_size)
+	ys = np.arange(-half_cube_size, half_cube_size+0.0005, grid_size)
+	zs = np.arange(-half_cube_size, half_cube_size+0.0005, grid_size)
+
+	half_cube_size = math.pi
+	grid_size = math.pi/4
+	rs = np.arange(-half_cube_size, half_cube_size+0.0005, grid_size)
+	ps = np.arange(-half_cube_size, half_cube_size+0.0005, grid_size)
+	yaws = np.arange(-half_cube_size, half_cube_size+0.0005, grid_size)
+
+	reach_data_location += '/reachability_data_'
+	# fmt = '%Y-%m-%d-%H-%M-%S'
+	# reach_data_location += datetime.datetime.now().strftime(fmt)
+	reach_data_location += '.csv'
+	fd = open(reach_data_location, 'w')
+
+	count = 0
+
+	for x in xs:
+		for y in ys:
+			for z in zs:
+				for r in rs:
+					for p in ps:
+						for yaw in yaws:
+							reachable = 0
+							# reachability_list = [[0.3,0.3,0.3,0.02920367,0.02920367,0.02920367]]
+							# if np.any([np.allclose([x,y,z,r,p,yaw],reach) for reach in reachability_list]):
+							# 	reachable = 1
+							# 	print 'reachable point'
+
+							reachability_list = [[rs[rs.size//2],ps[ps.size//2],yaws[yaws.size//2]]]
+							if np.any([np.allclose([r,p,yaw],reach) for reach in reachability_list]):
+								reachable = 1
+								print 'reachable point'
+
+							data = ("{:6d} " + "{:.1f} "*6 + "{:1d} \n").format(count, x, y, z, r, p, yaw, reachable)
+
+							fd.write(data)
+							count += 1
 	fd.close()
 
 
@@ -93,8 +140,10 @@ def process_reachability_data(reach_data_raw, processed_file_name):
 	np.max(data_ND_sdf2-data_ND_sdf)
 
 	# check that data loaded in c++ matches
-	# print "data_ND_full_sdf[2,1,0,0,10,1]:\t", data_ND__sdf[2,1,0,0,10,1]
-	print "data_ND_full_sdf[2,1,0]:\t", data_ND_sdf[2,1,0]
+	if len(data_ND_sdf.shape) == 3:
+		print "data_ND_full_sdf[2,1,0]:\t", data_ND_sdf[2,1,0]
+	if len(data_ND_sdf.shape) == 6:
+		print "data_ND_full_sdf[2,1,0,0,3,2]:\t", data_ND_sdf[2,1,0,0,3,2]
 
 	# import IPython
 	# IPython.embed()
@@ -132,11 +181,16 @@ def generate_graspit_config_file(config_args, reachability_config_filename):
 
 if __name__ == '__main__':
 
+	is_3D_space = False
+
 	# generate custom reachability space
 	reach_data_location = rospkg.RosPack().get_path('reachability_utils') + '/data/'
 	if not os.path.exists(reach_data_location):
 		os.makedirs(reach_data_location)
-	generate_reachability_space(reach_data_location)
+	if is_3D_space:
+		generate_reachability_space(reach_data_location)
+	else:
+		generate_reachability_space_6D(reach_data_location)
 
 	# process the generated reachability space
 	processed_reach_data_location = reach_data_location+'processed/'
