@@ -69,15 +69,15 @@ def generate_reachability_space_6D(reach_data_location):
 					for p in ps:
 						for yaw in yaws:
 							reachable = 0
-							# reachability_list = [[0.3,0.3,0.3,0.02920367,0.02920367,0.02920367]]
-							# if np.any([np.allclose([x,y,z,r,p,yaw],reach) for reach in reachability_list]):
-							# 	reachable = 1
-							# 	print 'reachable point'
-
-							reachability_list = [[rs[rs.size//2],ps[ps.size//2],yaws[yaws.size//2]]]
-							if np.any([np.allclose([r,p,yaw],reach) for reach in reachability_list]):
+							reachability_list = [[0.3,0.3,0.3,rs[rs.size//2],ps[ps.size//2],yaws[yaws.size//2]]]
+							if np.any([np.allclose([x,y,z,r,p,yaw],reach) for reach in reachability_list]):
 								reachable = 1
 								print 'reachable point'
+
+							# reachability_list = [[rs[rs.size//2],ps[ps.size//2],yaws[yaws.size//2]]]
+							# if np.any([np.allclose([r,p,yaw],reach) for reach in reachability_list]):
+							# 	reachable = 1
+							# 	print 'reachable point'
 
 							data = ("{:6d} " + "{:.1f} "*6 + "{:1d} \n").format(count, x, y, z, r, p, yaw, reachable)
 
@@ -108,7 +108,10 @@ def process_reachability_data(reach_data_raw, processed_file_name):
 	print "now generating sdf ..."
 	# Generate sdf
 	data_ND -= 0.5
-	data_ND_sdf = skfmm.distance(data_ND)
+	if len(data_ND_sdf.shape) == 3:
+		data_ND_sdf = skfmm.distance(data_ND)
+	if len(data_ND_sdf.shape) == 6:
+		data_ND_sdf = skfmm.distance(data_ND, periodic=[False,False,False,True,True,True])
 
 
 	# save dimension to file

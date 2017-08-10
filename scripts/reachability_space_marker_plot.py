@@ -174,9 +174,18 @@ def display_grasps_approach(grasps, marker_topic="marker_topic", frame_id="objec
 		p = grasp.pose
 		color=(1,1,0,1)
 
+		# fix to align Barrett hand approach_tran to line up with x axis
+		if grasp.approach_direction.vector.z == 1.0:
+			q_array_func = lambda p: np.array([p.x, p.y, p.z, p.w])
+			q_orig = q_array_func(grasp.pose.orientation)
+			rot = PyKDL.Rotation.Quaternion(*q_orig)
+			rot.DoRotY(-math.pi/2)
+			rot.DoRotX(math.pi)
+			grasp.pose.orientation = Quaternion(*rot.GetQuaternion())
+
 		marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
 		ma.markers.append(marker)
-	
+
 	rospy.sleep(1)
 	publisher.publish(ma)
 
