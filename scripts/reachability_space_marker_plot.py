@@ -164,7 +164,7 @@ def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
 
 
 
-def display_grasps_approach(grasps, marker_topic="marker_topic", frame_id="object_0"):
+def display_grasps_approach(grasps, energies=None, marker_topic="marker_topic", frame_id="object_0"):
 	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
 	
 	ma = visualization_msgs.msg.MarkerArray()
@@ -172,7 +172,11 @@ def display_grasps_approach(grasps, marker_topic="marker_topic", frame_id="objec
 	for count, grasp in enumerate(grasps):
 
 		p = grasp.pose
-		color=(1,1,0,1)
+		if energies is None:
+			color=(1,1,0,1)
+		else:
+			b = (energies[count]-np.min(energies)) / (np.max(energies)-np.min(energies))
+			color=(1-b,0,b,1)
 
 		# fix to align Barrett hand approach_tran to line up with x axis
 		if grasp.approach_direction.vector.z == 1.0:

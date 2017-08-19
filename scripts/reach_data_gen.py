@@ -108,9 +108,9 @@ def process_reachability_data(reach_data_raw, processed_file_name):
 	print "now generating sdf ..."
 	# Generate sdf
 	data_ND -= 0.5
-	if len(data_ND_sdf.shape) == 3:
+	if len(data_ND.shape) == 3:
 		data_ND_sdf = skfmm.distance(data_ND)
-	if len(data_ND_sdf.shape) == 6:
+	if len(data_ND.shape) == 6:
 		data_ND_sdf = skfmm.distance(data_ND, periodic=[False,False,False,True,True,True])
 
 
