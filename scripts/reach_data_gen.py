@@ -79,7 +79,7 @@ def generate_reachability_space_6D(reach_data_location):
 							# 	reachable = 1
 							# 	print 'reachable point'
 
-							data = ("{:6d} " + "{:.1f} "*6 + "{:1d} \n").format(count, x, y, z, r, p, yaw, reachable)
+							data = ("{:6d} " + "{:.6f} "*6 + "{:1d} \n").format(count, x, y, z, r, p, yaw, reachable)
 
 							fd.write(data)
 							count += 1
