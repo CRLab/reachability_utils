@@ -4,6 +4,7 @@ import ConfigParser
 import json
 import numpy as np
 import os
+import skfmm
 
 import rospy
 import rospkg
@@ -12,6 +13,7 @@ from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, Vector3
 
 import world_manager.srv
 from reachability_space_marker_plot import display_obstacle_space_data
+from reachability_space_marker_plot import *
 
 
 def read_vertex_points_from_ply_filepath(ply_filepath):
@@ -145,8 +147,22 @@ def add_obstacles_to_planning_scene(obstacles_dir, obstacles_list, frame_id='obj
 		wm_add_service_proxy(mesh_name, mesh_filepath, pose_stamped)
 
 
+def load_reachability_space (reachability_config_filename):
+	config = ConfigParser.ConfigParser()
+	config.read(reachability_config_filename)
+	processed_file_name = config.get('reachability_config', 'reachability_data_filename')
+
+	dims = np.loadtxt(processed_file_name+'.dims', delimiter=',', dtype=int)
+	reachability_data = np.fromfile(processed_file_name+'.full', dtype=float)
+	reachability_data = reachability_data.reshape(dims)
+
+	return reachability_data
+
+
 
 if __name__ == '__main__':
+
+	rospy.init_node('obstacle_processing')
 
 	# load reachability space parameters
 	reachability_config_filename = rospkg.RosPack().get_path('reachability_utils') + '/config/'
@@ -163,16 +179,43 @@ if __name__ == '__main__':
 	# add obstacles to reachability space
 	reachability_space_with_obstacles = add_obstacles_to_reachability_space(obstacles_point_cloud, mins[:3], step_size[:3], dims[:3])
 
+	# import IPython
+	# IPython.embed()
+
+	# # TODO:
+	# # curate obstacle list
+	# # load obstacles in rviz
+	# # visualize obstacle reach space and check it lines
+
+	# display_obstacle_space_data(reachability_space_with_obstacles, mins[:3], step_size[:3], dims[:3], marker_topic="marker_topic", frame_id="object_0")
+
+	# add_obstacles_to_planning_scene(obstacles_dir, obstacles_list, frame_id='object_0')
+
+
 	import IPython
 	IPython.embed()
 
-	# TODO:
-	# curate obstacle list
-	# load obstacles in rviz
-	# visualize obstacle reach space and check it lines
+	# load original reachability space
+	reachability_space = load_reachability_space (reachability_config_filename)
+	# visualize new reachability space
+	reachability_space_points = parse_reachability_space_to_point_list(reachability_space, mins, step_size, dims)
+	display_reachability_space_data(reachability_space_points, marker_topic="marker_topic", frame_id="object_0")
 
-	rospy.init_node('obstacle_test')
-	display_obstacle_space_data(reachability_space_with_obstacles, mins, step_size, dims, marker_topic="marker_topic", frame_id="object_0")
+	# combine reachability space and obstacle space
+	reachability_space = combine_reachability_space_with_obstacles_space(reachability_space, reachability_space_with_obstacles)
+	# visualize new reachability space
+	reachability_space_points = parse_reachability_space_to_point_list(reachability_space, mins, step_size, dims)
+	display_reachability_space_data(reachability_space_points, marker_topic="marker_topic", frame_id="object_0")
 
-	add_obstacles_to_planning_scene(obstacles_dir, obstacles_list, frame_id='object_0')
+
+	# Generate sdf
+	reachability_space -= 0.5
+	if len(reachability_space.shape) == 3:
+		reachability_space_sdf = skfmm.distance(reachability_space)
+	if len(reachability_space.shape) == 6:
+		reachability_space_sdf = skfmm.distance(reachability_space, periodic=[False,False,False,True,True,True])
+
+	# visualize sdf
+
+
 

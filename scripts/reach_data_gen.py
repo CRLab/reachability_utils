@@ -112,6 +112,7 @@ def process_reachability_data(reach_data_raw, processed_file_name):
 		data_ND_sdf = skfmm.distance(data_ND)
 	if len(data_ND.shape) == 6:
 		data_ND_sdf = skfmm.distance(data_ND, periodic=[False,False,False,True,True,True])
+	data_ND += 0.5	# undo previous operation
 
 
 	# save dimension to file
@@ -184,7 +185,7 @@ def generate_graspit_config_file(config_args, reachability_config_filename):
 
 if __name__ == '__main__':
 
-	is_3D_space = False
+	is_3D_space = True
 
 	# generate custom reachability space
 	reach_data_location = rospkg.RosPack().get_path('reachability_utils') + '/data/'

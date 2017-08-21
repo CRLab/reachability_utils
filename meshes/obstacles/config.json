@@ -1,10 +1,10 @@
 [
     {
-        "filename": "cube_small.ply",
+        "filename": "cube_small_flipped.ply",
         "pose": [0.4,0.1,0.2,0,0,0]
     }, 
     {
-        "filename": "cube.ply",
+        "filename": "cube_small_flipped.ply",
         "pose": [-1,0,-2,1,2,1]
     }
 ]

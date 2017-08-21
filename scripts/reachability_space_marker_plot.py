@@ -29,7 +29,7 @@ def make_marker(m_id, pose, frame_id="base_link",
 
 	return m
 
-def parse_obstacle_space(obstacle_data, mins, step_size, dims):
+def parse_reachability_space_to_point_list(obstacle_data, mins, step_size, dims):
 
 	obstacle_data_points = []
 	for i in range(obstacle_data.size):
@@ -46,7 +46,7 @@ def parse_obstacle_space(obstacle_data, mins, step_size, dims):
 
 def display_obstacle_space_data(obstacle_data, mins, step_size, dims, marker_topic="marker_topic", frame_id="object_0"):
 
-	obstacle_data_points = parse_obstacle_space(obstacle_data, mins, step_size, dims)
+	obstacle_data_points = parse_reachability_space_to_point_list(obstacle_data, mins, step_size, dims)
 
 	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
 
