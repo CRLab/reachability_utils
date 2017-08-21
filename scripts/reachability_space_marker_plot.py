@@ -29,18 +29,58 @@ def make_marker(m_id, pose, frame_id="base_link",
 
 	return m
 
+def parse_obstacle_space(obstacle_data, mins, step_size, dims):
 
-def display_reachability_space(filename, marker_topic="marker_topic", frame_id="object_0"):
+	obstacle_data_points = []
+	for i in range(obstacle_data.size):
+		idx = np.unravel_index(i, obstacle_data.shape)
+		val = obstacle_data[idx]
+
+		# position = mins+ idx*step_size
+		f = lambda idx_,min_,step_: min_+idx_*step_
+		position = map(f, idx, mins, step_size)
+		entry = [i]+ position+ [val]	# [i, position, val]
+		obstacle_data_points.append(entry)
+
+	return obstacle_data_points
+
+def display_obstacle_space_data(obstacle_data, mins, step_size, dims, marker_topic="marker_topic", frame_id="object_0"):
+
+	obstacle_data_points = parse_obstacle_space(obstacle_data, mins, step_size, dims)
 
 	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
-		
-	data_np = np.loadtxt(filename)
+
+	ma = visualization_msgs.msg.MarkerArray()
+
+	for count, data in enumerate(obstacle_data_points):
+
+		if data[-1]==1.:
+			x = data[1]
+			y = data[2]
+			z = data[3]
+
+			p = Pose(Point(x,y,z), Quaternion(0,0,0,1))
+			color=(1,0,1,1)
+			m_type = visualization_msgs.msg.Marker.SPHERE
+			scale = (.03,.03,.03)
+
+			marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color, m_type=m_type, scale=scale)
+			ma.markers.append(marker)
+
+	rospy.sleep(1)
+	publisher.publish(ma)
+
+
+def display_reachability_space_data(data_np, marker_topic="marker_topic", frame_id="object_0"):
+
+	publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
+
 	ma = visualization_msgs.msg.MarkerArray()
 
 	for count, data in enumerate(data_np):
 
-		# if True:
-		if count % 25 == 0:
+		if True:
+		# if count % 25 == 0:
 			rospy.sleep(0.001)
 
 			x = data[1]
@@ -71,6 +111,12 @@ def display_reachability_space(filename, marker_topic="marker_topic", frame_id="
 			
 	rospy.sleep(1)
 	publisher.publish(ma)
+
+def display_reachability_space(filename, marker_topic="marker_topic", frame_id="object_0"):
+
+	data_np = np.loadtxt(filename)
+	display_reachability_space_data(data_np, marker_topic, frame_id)
+
 
 def load_sdf_space(processed_file_name):
 
@@ -121,9 +167,8 @@ def display_sdf_space_old(processed_file_name, marker_topic="marker_topic"):
 	rospy.sleep(1)
 	publisher.publish(ma)
 
-def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
+def display_sdf_space_data(sdf_data, marker_topic="marker_topic"):
 
-	sdf_data = load_sdf_space(processed_file_name)
 	sdf_data = np.array(sdf_data)
 	min_sdf = np.min(sdf_data[:,-1])
 	max_sdf = np.max(sdf_data[:,-1])
@@ -160,6 +205,11 @@ def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
 	
 	rospy.sleep(1)
 	publisher.publish(ma)
+
+def display_sdf_space(processed_file_name, marker_topic="marker_topic"):
+
+	sdf_data = load_sdf_space(processed_file_name)
+	display_sdf_space_data(sdf_data, marker_topic)
 
 
 

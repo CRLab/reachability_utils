@@ -5,9 +5,13 @@ import json
 import numpy as np
 import os
 
+import rospy
 import rospkg
 import tf_conversions
-from geometry_msgs.msg import Pose, Quaternion, Point, Vector3
+from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, Vector3
+
+import world_manager.srv
+from reachability_space_marker_plot import display_obstacle_space_data
 
 
 def read_vertex_points_from_ply_filepath(ply_filepath):
@@ -97,7 +101,7 @@ def add_obstacles_to_reachability_space(points, mins, step_size, dims):
 		return voxel_grid
 
 	grid_points_int = grid_points.astype(int)
-	voxel_grid[grid_points_int] = 1
+	voxel_grid[tuple(grid_points_int.T)] = 1
 
 	return voxel_grid
 
@@ -113,6 +117,33 @@ def combine_reachability_space_with_obstacles_space(reachability_space, obstacle
 
 def combine_reachability_space_with_obstacles_spaceSDF(reachability_space, obstacles_space):
 	pass
+
+def xyzrpy_to_pose(xyzrpy):
+
+	r = tf_conversions.Rotation.RPY(*xyzrpy[3:])
+	pose = Pose(Point(*xyzrpy[:3]), Quaternion(*r.GetQuaternion()))
+
+	return pose
+
+
+def add_obstacles_to_planning_scene(obstacles_dir, obstacles_list, frame_id='object_0'):
+
+	wm_add_service_proxy = rospy.ServiceProxy("/world_manager/add_object",
+											   world_manager.srv.AddObject)
+	wm_add_service_proxy.wait_for_service()
+
+	for i, obstacle in enumerate(obstacles_list):
+
+		mesh_filepath = os.path.join(obstacles_dir, obstacle['filename'])
+		pose_xyzrpy = obstacle['pose']
+
+		pose_stamped = PoseStamped()
+		pose_stamped.header.frame_id = frame_id
+		pose_stamped.pose = xyzrpy_to_pose(pose_xyzrpy)
+
+		mesh_name = "obstacle_" + str(i)
+		wm_add_service_proxy(mesh_name, mesh_filepath, pose_stamped)
+
 
 
 if __name__ == '__main__':
@@ -140,6 +171,8 @@ if __name__ == '__main__':
 	# load obstacles in rviz
 	# visualize obstacle reach space and check it lines
 
+	rospy.init_node('obstacle_test')
+	display_obstacle_space_data(reachability_space_with_obstacles, mins, step_size, dims, marker_topic="marker_topic", frame_id="object_0")
 
-
+	add_obstacles_to_planning_scene(obstacles_dir, obstacles_list, frame_id='object_0')
 
