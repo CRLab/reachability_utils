@@ -107,6 +107,32 @@ def add_obstacles_to_reachability_space(points, mins, step_size, dims):
 
 	return voxel_grid
 
+def add_obstacles_to_reachability_space_full(points, mins, step_size, dims):
+
+	voxel_grid = np.zeros(shape=dims)
+
+	bbox_min = np.min(points, axis=0)
+	bbox_max = np.max(points, axis=0)
+
+	grid_points_min = np.floor( (bbox_min - np.array(mins)) / step_size )
+	grid_points_max = np.ceil( (bbox_max - np.array(mins)) / step_size )
+
+	grid_points_min[np.where( grid_points_min < 0 )] = 0
+	grid_points_max[np.where( grid_points_max > dims-1)] = dims-1
+
+	if (grid_points_min==grid_points_max).any():
+		return voxel_grid
+
+	grid_points_min = grid_points_min.astype(int)
+	grid_points_max = grid_points_max.astype(int)
+
+	voxel_grid[grid_points_min[0]:grid_points_max[1]+1,
+		grid_points_min[0]:grid_points_max[1]+1,
+		grid_points_min[0]:grid_points_max[1]+1] = 1
+
+	return voxel_grid
+
+
 def combine_reachability_space_with_obstacles_space(reachability_space, obstacles_space):
 	
 	obs_shape = obstacles_space.shape
