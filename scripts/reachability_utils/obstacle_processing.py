@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 import plyfile
 import ConfigParser

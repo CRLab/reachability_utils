@@ -11,85 +11,7 @@ import grid_sample_client
 
 import world_manager.srv
 from reachability_space_marker_plot import display_reachability_space, display_sdf_space, display_grasps_approach
-
-GraspEnergies = namedtuple('GraspEnergies', ['grasps', 'energies'], verbose=False)
-
-def get_grasp_from_graspit_sim_ann(
-	mesh_path,
-	search_energy="REACHABILITY_ENERGY",
-	max_steps=70000,
-	robot="fetch_gripper",
-	obstacle="table"):
-
-	gc = graspit_commander.GraspitCommander()
-	gc.clearWorld()
-
-	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_path)
-
-	result = gc.planGrasps(search_energy=search_energy, max_steps=max_steps)
-
-	return result
-
-def get_grasp_from_graspit_ellipse(
-	mesh_path,
-	search_energy="REACHABILITY_ENERGY",
-	robot="fetch_gripper",
-	pre_grasp_dofs=(4,),
-	obstacle="table"):
-
-	gc = graspit_commander.GraspitCommander()
-	gc.clearWorld()
-
-	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_path)
-
-	gl = grid_sample_client.GridSampleClient()
-	result = gl.computePreGrasps(10, 2)
-	pre_grasps = result.grasps
-	grasps = gl.evaluatePreGrasps(pre_grasps, pre_grasp_dofs=pre_grasp_dofs)
-
-	# evaluating grasps
-	result = evaluate_grasp_list(
-		grasps,
-		search_energy=search_energy)
-
-	return result
-
-def evaluate_grasp_complete(
-	grasps,
-	mesh_path,
-	search_energy="REACHABILITY_ENERGY",
-	robot="fetch_gripper",
-	obstacle="table"):
-
-	gc = graspit_commander.GraspitCommander()
-	gc.clearWorld()
-	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_path)
-
-	grasp_results = evaluate_grasp_list(grasps,	search_energy)
-	return grasp_results
-
-def evaluate_grasp_list(
-	grasps,
-	search_energy="REACHABILITY_ENERGY"):
-	# this assumes the hand and object is already loaded
-
-	gc = graspit_commander.GraspitCommander()
-
-	energies = []
-	for g in grasps:
-		gc.autoOpen()
-		gc.setRobotPose(g.pose)
-		gc.forceRobotDof(g.dofs)
-		grasp_energy = gc.computeEnergy(search_energy)
-		energies.append(grasp_energy.energy)
-
-	energies, grasps = zip(*sorted(zip(energies, grasps)))
-
-	grasp_results = GraspEnergies(grasps=grasps, energies=energies)
-	return grasp_results
+from graspit_utils import get_grasp_from_graspit_sim_ann, get_grasp_from_graspit_ellipse
 
 
 if __name__ == '__main__':
@@ -146,3 +68,6 @@ if __name__ == '__main__':
 	# 	robot="fetch_gripper",
 	# 	pre_grasp_dofs=(4,),
 	# 	obstacle="table")
+	# grasps = grasp_results.grasps
+	# energies = grasp_results.energies
+	# display_grasps_approach(grasps=grasps, energies=energies, marker_topic="marker_topic", frame_id="object_0")
