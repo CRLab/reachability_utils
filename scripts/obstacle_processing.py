@@ -107,6 +107,7 @@ def add_obstacles_to_reachability_space(points, mins, step_size, dims):
 
 	return voxel_grid
 
+
 def add_obstacles_to_reachability_space_full(points, mins, step_size, dims):
 
 	voxel_grid = np.zeros(shape=dims)
@@ -117,8 +118,9 @@ def add_obstacles_to_reachability_space_full(points, mins, step_size, dims):
 	grid_points_min = np.floor( (bbox_min - np.array(mins)) / step_size )
 	grid_points_max = np.ceil( (bbox_max - np.array(mins)) / step_size )
 
-	grid_points_min[np.where( grid_points_min < 0 )] = 0
-	grid_points_max[np.where( grid_points_max > dims-1)] = dims-1
+	# grid_points_min[np.where( grid_points_min < 0 )] = 0
+	grid_points_min = np.maximum(grid_points_min, 0)
+	grid_points_max = np.minimum(grid_points_max, dims-1)
 
 	if (grid_points_min==grid_points_max).any():
 		return voxel_grid
@@ -126,10 +128,28 @@ def add_obstacles_to_reachability_space_full(points, mins, step_size, dims):
 	grid_points_min = grid_points_min.astype(int)
 	grid_points_max = grid_points_max.astype(int)
 
-	voxel_grid[grid_points_min[0]:grid_points_max[1]+1,
-		grid_points_min[0]:grid_points_max[1]+1,
-		grid_points_min[0]:grid_points_max[1]+1] = 1
+	voxel_grid[grid_points_min[0]:grid_points_max[0]+1,
+		grid_points_min[1]:grid_points_max[1]+1,
+		grid_points_min[2]:grid_points_max[2]+1] = 1
 
+	return voxel_grid
+
+def create_reachability_space_from_obstacles(obstacles_dir, obstacles_list, mins, step_size, dims):
+
+	voxel_grid = np.zeros(shape=dims)
+
+	for obstacle in obstacles_list:
+
+		mesh_file = os.path.join(obstacles_dir, obstacle['filename'])
+		pose_xyzrpy = obstacle['pose']
+
+		vertices = read_vertex_points_from_ply_filepath(mesh_file)
+		transform = xyzrpy_to_transform_array(pose_xyzrpy)
+		vertices_transformed = transform_points(vertices, transform)
+
+		voxel_grid += add_obstacles_to_reachability_space_full(vertices_transformed, mins, step_size, dims)
+
+	voxel_grid[np.where( voxel_grid > 0 )] = 1
 	return voxel_grid
 
 
@@ -139,7 +159,7 @@ def combine_reachability_space_with_obstacles_space(reachability_space, obstacle
 	reach_shape = reachability_space.shape[:len(obs_shape)]
 	assert reach_shape==obs_shape
 
-	reachability_space[obstacles_space>1] = 0
+	reachability_space[obstacles_space>0] = 0
 
 	return reachability_space
 
@@ -199,11 +219,13 @@ if __name__ == '__main__':
 	obstacles_dir = rospkg.RosPack().get_path('reachability_utils') + '/meshes/obstacles'
 	obstacles_list = load_obstacles(obstacles_dir)
 
-	# collect points from obstacles
-	obstacles_point_cloud = collate_points_from_obstacles(obstacles_dir, obstacles_list)
+	# # collect points from obstacles
+	# obstacles_point_cloud = collate_points_from_obstacles(obstacles_dir, obstacles_list)
 
-	# add obstacles to reachability space
-	reachability_space_with_obstacles = add_obstacles_to_reachability_space(obstacles_point_cloud, mins[:3], step_size[:3], dims[:3])
+	# # add obstacles to reachability space
+	# reachability_space_with_obstacles = add_obstacles_to_reachability_space(obstacles_point_cloud, mins[:3], step_size[:3], dims[:3])
+
+	reachability_space_with_obstacles = create_reachability_space_from_obstacles(obstacles_dir, obstacles_list, mins[:3], step_size[:3], dims[:3])
 
 	# import IPython
 	# IPython.embed()

@@ -102,7 +102,7 @@ def display_reachability_space_data(data_np, marker_topic="marker_topic", frame_
 				color=(0,1,0,1)
 				print "reachable point"
 			else:
-				continue
+				# continue
 				color=(1,0,0,1)
 					
 
