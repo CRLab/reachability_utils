@@ -55,7 +55,7 @@ if __name__ == '__main__':
 	# ####################
 	# ##### Display grasps
 	# grasp_results = get_grasp_from_graspit_sim_ann(
-	# 	mesh_path=mesh_filepath,
+	# 	mesh_filepath=mesh_filepath,
 	# 	max_steps=70000)
 	# grasps = grasp_results.grasps
 	# energies = grasp_results.energies
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
 
 	# grasp_results = get_grasp_from_graspit_ellipse(
-	# 	mesh_path=mesh_filepath,
+	# 	mesh_filepath=mesh_filepath,
 	# 	robot="fetch_gripper",
 	# 	pre_grasp_dofs=(4,),
 	# 	obstacle="table")

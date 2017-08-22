@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import subprocess
 from collections import namedtuple
 
 import rospy
@@ -12,7 +13,7 @@ import grid_sample_client
 GraspEnergies = namedtuple('GraspEnergies', ['grasps', 'energies'], verbose=False)
 
 def get_grasp_from_graspit_sim_ann(
-	mesh_path,
+	mesh_filepath,
 	search_energy="REACHABILITY_ENERGY",
 	max_steps=70000,
 	robot="fetch_gripper",
@@ -22,14 +23,14 @@ def get_grasp_from_graspit_sim_ann(
 	gc.clearWorld()
 
 	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_path)
+	gc.importGraspableBody(mesh_filepath)
 
 	result = gc.planGrasps(search_energy=search_energy, max_steps=max_steps)
 
 	return result
 
 def get_grasp_from_graspit_ellipse(
-	mesh_path,
+	mesh_filepath,
 	search_energy="REACHABILITY_ENERGY",
 	robot="fetch_gripper",
 	pre_grasp_dofs=(4,),
@@ -39,7 +40,7 @@ def get_grasp_from_graspit_ellipse(
 	gc.clearWorld()
 
 	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_path)
+	gc.importGraspableBody(mesh_filepath)
 
 	gl = grid_sample_client.GridSampleClient()
 	result = gl.computePreGrasps(10, 0)
@@ -55,7 +56,7 @@ def get_grasp_from_graspit_ellipse(
 
 def evaluate_grasp_complete(
 	grasps,
-	mesh_path,
+	mesh_filepath,
 	search_energy="REACHABILITY_ENERGY",
 	robot="fetch_gripper",
 	obstacle="table"):
@@ -63,7 +64,7 @@ def evaluate_grasp_complete(
 	gc = graspit_commander.GraspitCommander()
 	gc.clearWorld()
 	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_path)
+	gc.importGraspableBody(mesh_filepath)
 
 	grasp_results = evaluate_grasp_list(grasps,	search_energy)
 	return grasp_results
@@ -87,4 +88,16 @@ def evaluate_grasp_list(
 
 	grasp_results = GraspEnergies(grasps=grasps, energies=energies)
 	return grasp_results
+
+
+
+def start_graspit():
+    # cmd_str = "roslaunch reachability_energy_plugin reachability_energy_plugin.launch"
+    cmd_str = "rosrun reachability_energy_plugin launch_graspit.sh"
+    p = subprocess.Popen(cmd_str.split())
+
+
+def kill_graspit():
+    cmd_str = "rosnode kill /graspit_interface_node"
+    p = subprocess.Popen(cmd_str.split())
 
