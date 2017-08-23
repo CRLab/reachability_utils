@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import time
 import subprocess
 from collections import namedtuple
 
@@ -92,12 +93,36 @@ def evaluate_grasp_list(
 
 
 def start_graspit():
-    # cmd_str = "roslaunch reachability_energy_plugin reachability_energy_plugin.launch"
-    cmd_str = "rosrun reachability_energy_plugin launch_graspit.sh"
-    p = subprocess.Popen(cmd_str.split())
+	# cmd_str = "roslaunch reachability_energy_plugin reachability_energy_plugin.launch"
+	cmd_str = "rosrun reachability_energy_plugin launch_graspit.sh"
+	p = subprocess.Popen(cmd_str.split())
+	time.sleep(3.0) # Wait for graspit to start
 
 
 def kill_graspit():
-    cmd_str = "rosnode kill /graspit_interface_node"
-    p = subprocess.Popen(cmd_str.split())
+	cmd_str = "rosnode kill /graspit_interface_node"
+	p = subprocess.Popen(cmd_str.split())
+	time.sleep(3.0) # Wait for graspit to start
 
+
+
+def visualize_grasps_in_graspit_with_mesh(
+	grasps,
+	mesh_filepath,
+	robot="fetch_gripper"):
+
+	gc = graspit_commander.GraspitCommander()
+	gc.clearWorld()
+	gc.importRobot(robot)
+	gc.importGraspableBody(mesh_filepath)
+	gc.setRobotPose(grasp.pose)
+
+	rospy.loginfo("Showing grasp in Graspit!")
+
+def visualize_grasps_in_graspit(
+	grasps):
+
+	gc = graspit_commander.GraspitCommander()
+	gc.setRobotPose(grasp.pose)
+
+	rospy.loginfo("Showing grasp in Graspit!")
