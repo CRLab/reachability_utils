@@ -15,7 +15,7 @@ GraspEnergies = namedtuple('GraspEnergies', ['grasps', 'energies'], verbose=Fals
 
 def get_grasp_from_graspit_sim_ann(
 	mesh_filepath,
-	search_energy="REACHABILITY_ENERGY",
+	search_energy="HYBRID_REACHABLE_GRASP_ENERGY",
 	max_steps=70000,
 	robot="fetch_gripper",
 	obstacle="table"):
@@ -32,7 +32,7 @@ def get_grasp_from_graspit_sim_ann(
 
 def get_grasp_from_graspit_ellipse(
 	mesh_filepath,
-	search_energy="REACHABILITY_ENERGY",
+	search_energy="HYBRID_REACHABLE_GRASP_ENERGY",
 	robot="fetch_gripper",
 	pre_grasp_dofs=(4,),
 	obstacle="table"):
@@ -58,7 +58,7 @@ def get_grasp_from_graspit_ellipse(
 def evaluate_grasp_complete(
 	grasps,
 	mesh_filepath,
-	search_energy="REACHABILITY_ENERGY",
+	search_energy="HYBRID_REACHABLE_GRASP_ENERGY",
 	robot="fetch_gripper",
 	obstacle="table"):
 
@@ -72,7 +72,7 @@ def evaluate_grasp_complete(
 
 def evaluate_grasp_list(
 	grasps,
-	search_energy="REACHABILITY_ENERGY"):
+	search_energy="HYBRID_REACHABLE_GRASP_ENERGY"):
 	# this assumes the hand and object is already loaded
 
 	gc = graspit_commander.GraspitCommander()
@@ -107,7 +107,7 @@ def kill_graspit():
 
 
 def visualize_grasps_in_graspit_with_mesh(
-	grasps,
+	grasp,
 	mesh_filepath,
 	robot="fetch_gripper"):
 
@@ -120,7 +120,7 @@ def visualize_grasps_in_graspit_with_mesh(
 	rospy.loginfo("Showing grasp in Graspit!")
 
 def visualize_grasps_in_graspit(
-	grasps):
+	grasp):
 
 	gc = graspit_commander.GraspitCommander()
 	gc.setRobotPose(grasp.pose)
