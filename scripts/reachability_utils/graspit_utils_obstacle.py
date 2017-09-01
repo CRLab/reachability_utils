@@ -49,18 +49,22 @@ def evaluateSimAnnGrasps(pre_grasps):
 
 def get_grasp_from_graspit_sim_ann(
 	mesh_filepath,
+	target_object_pose,
 	search_energy="HYBRID_REACHABLE_GRASP_ENERGY",
 	max_steps=70000,
 	robot="fetch_gripper",
-	obstacle="table"):
+	obstacle_info=[]):
 
 	gc = graspit_commander.GraspitCommander()
 	gc.clearWorld()
 
 	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_filepath)
+	gc.importGraspableBody(mesh_filepath, target_object_pose)
 
+	if obstacle_info != []:
+		load_object_into_graspit(gc, obstacle_info)
 	result = gc.planGrasps(search_energy=search_energy, max_steps=max_steps)
+
 
 	# close hand and evaluate grasps
 	pre_grasps = result.grasps
