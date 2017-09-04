@@ -75,6 +75,7 @@ def get_grasp_from_graspit_sim_ann(
 
 def get_grasp_from_graspit_ellipse(
 	mesh_filepath,
+	target_object_pose,
 	search_energy="HYBRID_REACHABLE_GRASP_ENERGY",
 	robot="fetch_gripper",
 	pre_grasp_dofs=(4,),
@@ -84,7 +85,7 @@ def get_grasp_from_graspit_ellipse(
 	gc.clearWorld()
 
 	gc.importRobot(robot)
-	gc.importGraspableBody(mesh_filepath)
+	gc.importGraspableBody(mesh_filepath, target_object_pose)
 
 	# if there is any obstacle_info
 	if obstacle_info != []:
