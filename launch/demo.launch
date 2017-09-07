@@ -13,6 +13,7 @@
 
   <!-- If needed, broadcast static tf for robot root -->
   
+  <rosparam command="load" file="$(find reachability_utils)/launch/starting_joint_state.yaml"/>
 
   <!-- We do not have a robot connected, so publish fake joint states -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">

@@ -1,0 +1,16 @@
+zeros:
+  r_wheel_joint: 0.0
+  l_wheel_joint: 0.0
+  torso_lift_joint: 0.0
+  head_pan_joint: 0.0
+  head_tilt_joint: -0.000202
+  shoulder_pan_joint: -1.44
+  shoulder_lift_joint: -1.06
+  upperarm_roll_joint: -2.60003661568
+  elbow_flex_joint: -1.0
+  forearm_roll_joint: -0.27
+  wrist_flex_joint: -1.61994011329
+  wrist_roll_joint: 0.229971694105
+  r_gripper_finger_joint: 0.05
+  l_gripper_finger_joint: 0.05
+  bellows_joint: 0.0
