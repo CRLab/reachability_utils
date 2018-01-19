@@ -9,7 +9,7 @@ from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
 import graspit_commander
 import grid_sample_client
 
-import world_manager.srv
+from world_manager.world_manager_client import WorldManagerClient
 from reachability_space_marker_plot import display_reachability_space, display_sdf_space, display_grasps_approach
 from graspit_utils import get_grasp_from_graspit_sim_ann, get_grasp_from_graspit_ellipse
 
@@ -18,10 +18,7 @@ if __name__ == '__main__':
 
 	rospy.init_node("reachability_visualization")
 
-	wm_add_service_proxy = rospy.ServiceProxy("/world_manager/add_object",
-											   world_manager.srv.AddObject)
-	wm_add_service_proxy.wait_for_service()
-
+	wm_client = WorldManagerClient()
 
 	meshdir = rospkg.RosPack().get_path('reachability_utils') + "/meshes/"
 	mesh_name = "object_0"
@@ -32,7 +29,7 @@ if __name__ == '__main__':
 	pose_stamped.header.frame_id = "base_link"
 	pose_stamped.pose = Pose(Point(1,1,1), Quaternion(0,0,0,1))
 
-	wm_add_service_proxy(mesh_name, mesh_filepath, pose_stamped)
+	wm_client.add_mesh(mesh_name, mesh_filepath, pose_stamped)
 
 	import IPython
 	IPython.embed()

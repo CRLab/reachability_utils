@@ -129,15 +129,14 @@ def evaluate_grasp_list(
 
 
 
-def start_graspit():
+def start_graspit(cmd_str):
 	# cmd_str = "roslaunch reachability_energy_plugin reachability_energy_plugin.launch"
-	cmd_str = "rosrun reachability_energy_plugin launch_graspit.sh"
 	p = subprocess.Popen(cmd_str.split())
 	time.sleep(3.0) # Wait for graspit to start
 
 
-def kill_graspit():
-	cmd_str = "rosnode kill /graspit_interface_node"
+def kill_graspit(cmd_str = "rosnode kill /graspit_interface_node"):
+
 	p = subprocess.Popen(cmd_str.split())
 	time.sleep(3.0) # Wait for graspit to start
 

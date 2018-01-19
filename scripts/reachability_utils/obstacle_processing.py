@@ -12,7 +12,7 @@ import rospkg
 import tf_conversions
 from geometry_msgs.msg import PoseStamped, Pose, Quaternion, Point, Vector3
 
-import world_manager.srv
+from world_manager.world_manager_client import WorldManagerClient
 from reachability_space_marker_plot import display_obstacle_space_data
 from reachability_space_marker_plot import *
 
@@ -177,9 +177,7 @@ def xyzrpy_to_pose(xyzrpy):
 
 def add_obstacles_to_planning_scene(obstacles_dir, obstacles_list, frame_id='object_0'):
 
-	wm_add_service_proxy = rospy.ServiceProxy("/world_manager/add_object",
-											   world_manager.srv.AddObject)
-	wm_add_service_proxy.wait_for_service()
+	wm_client = WorldManagerClient()
 
 	for i, obstacle in enumerate(obstacles_list):
 
@@ -191,7 +189,7 @@ def add_obstacles_to_planning_scene(obstacles_dir, obstacles_list, frame_id='obj
 		pose_stamped.pose = xyzrpy_to_pose(pose_xyzrpy)
 
 		mesh_name = "obstacle_" + str(i)
-		wm_add_service_proxy(mesh_name, mesh_filepath, pose_stamped)
+		wm_client.add_mesh(mesh_name, mesh_filepath, pose_stamped)
 
 
 def load_reachability_space (reachability_config_filename):
