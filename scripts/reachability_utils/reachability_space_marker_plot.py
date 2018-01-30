@@ -12,7 +12,7 @@ import os
 
 
 def make_marker(m_id, pose, frame_id="base_link",
-                color=(1, 0, 0, 1), scale=(.1, .01, .01),
+                color=(1, 0, 0, 1), scale=(.1, .03, .01),
                 m_type=visualization_msgs.msg.Marker.ARROW):
     m = visualization_msgs.msg.Marker()
     m.id = m_id
@@ -69,32 +69,28 @@ def display_obstacle_space_data(obstacle_data, mins, step_size, dims, marker_top
     publisher.publish(ma)
 
 
-def display_reachability_space_data(data_np, marker_topic="marker_topic", frame_id="object_0"):
-    publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
-
+def get_marker_array(data_np, frame_id="object_0", arrow_direction='x'):
     ma = visualization_msgs.msg.MarkerArray()
 
     for count, data in enumerate(data_np):
 
         if True:
             # if count % 25 == 0:
-            rospy.sleep(0.001)
+            idx, x, y, z, roll, pitch, yaw, is_reachable = data
 
-            x = data[1]
-            y = data[2]
-            z = data[3]
-
-            if len(data) > 6:
-                rot = PyKDL.Rotation.RPY(data[4], data[5], data[6])
+            rotation = PyKDL.Rotation.RPY(roll, pitch, yaw)
+            if arrow_direction == 'x':
+                pass
+            elif arrow_direction == 'y':
+                rotation.DoRotZ(math.pi / 2)
+            elif arrow_direction == 'z':
+                rotation.DoRotY(-math.pi / 2)
             else:
-                pitch = math.atan2(-z, math.sqrt(x * x + y * y))
-                yaw = math.atan2(y, x)
-                rot = PyKDL.Rotation.RPY(0, pitch, yaw)
+                print "Invalid arrow direction, using default x "
 
-            quarternion = rot.GetQuaternion()
+            quarternion = rotation.GetQuaternion()
             p = Pose(Point(x, y, z), Quaternion(*quarternion))
 
-            is_reachable = (data[-1] == 1.)
             if is_reachable:
                 color = (0, 1, 0, 1)
                 print "reachable point"
@@ -105,13 +101,35 @@ def display_reachability_space_data(data_np, marker_topic="marker_topic", frame_
             marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
             ma.markers.append(marker)
 
-    rospy.sleep(1)
-    publisher.publish(ma)
+    return ma
 
 
-def display_reachability_space(filename, marker_topic="marker_topic", frame_id="object_0"):
+def generate_arrow_based_on_location(xyz):
+    x, y, z = xyz
+
+    row = 0
+    pitch = math.atan2(-z, math.sqrt(x * x + y * y))
+    yaw = math.atan2(y, x)
+    return [row, pitch, yaw]
+
+
+def display_reachability_space(filename, marker_topic="marker_topic", frame_id="object_0", arrow_direction='x'):
     data_np = np.loadtxt(filename)
-    display_reachability_space_data(data_np, marker_topic, frame_id)
+
+    if data_np.shape[1] < 6:
+        # if the reachability data does not have rpy information, generate pose based on location
+        data_full = np.zeros((data_np.shape[0], 8))
+        data_full[:, :4] = data_np[:, :4]
+        data_full[:, -1] = data_np[:, -1]
+
+        rpys = map(generate_arrow_based_on_location, data_np[:, 1:4])
+        data_full[:, 4:7] = np.array(rpys)
+        data_np = data_full
+
+    publisher = rospy.Publisher(marker_topic, visualization_msgs.msg.MarkerArray, queue_size=100000)
+    marker_array = get_marker_array(data_np, frame_id, arrow_direction=arrow_direction)
+    rospy.sleep(1)
+    publisher.publish(marker_array)
 
 
 def load_sdf_space(processed_file_name):

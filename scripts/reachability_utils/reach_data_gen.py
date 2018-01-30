@@ -115,8 +115,8 @@ def process_reachability_data(reach_data_raw, processed_file_name):
     # save dimension to file
     def save_array(filename, array):
         with open(filename, 'w') as f:
-            f.write(', '.join(str(x) for x in array)) \
- \
+            f.write(', '.join(str(x) for x in array))
+
     step_size = map(lambda x: x[1] - x[0] if len(x) > 1 else 1, unique_elements)
     step_size = np.array(step_size)
 

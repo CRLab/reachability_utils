@@ -9,14 +9,12 @@ from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
 import graspit_commander
 import grid_sample_client
 
-from world_manager.world_manager_client import WorldManagerClient
+import world_manager.world_manager_client as wm_client
 from reachability_space_marker_plot import display_reachability_space, display_sdf_space, display_grasps_approach
 from graspit_utils import get_grasp_from_graspit_sim_ann, get_grasp_from_graspit_ellipse
 
 if __name__ == '__main__':
     rospy.init_node("reachability_visualization")
-
-    wm_client = WorldManagerClient()
 
     meshdir = rospkg.RosPack().get_path('reachability_utils') + "/meshes/"
     mesh_name = "object_0"
