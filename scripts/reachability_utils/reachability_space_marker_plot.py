@@ -2,25 +2,36 @@
 
 import visualization_msgs.msg
 import rospy
-import PyKDL
+import tf_conversions
 from geometry_msgs.msg import Pose, Quaternion, Point, Vector3
 import std_msgs.msg
 import numpy as np
 import math
-import rospkg
-import os
 
 
-def make_marker(m_id, pose, frame_id="base_link",
-                color=(1, 0, 0, 1), scale=(.1, .03, .01),
-                m_type=visualization_msgs.msg.Marker.ARROW):
+def make_marker(m_id, pose, frame_id="base_link", color=(1, 0, 0, 1), scale=(.1, .03, .01), m_type=visualization_msgs.msg.Marker.ARROW, arrow_direction='x'):
+
+    final_marker_pose = tf_conversions.fromMsg(pose)
+    # For a given pose, the marker can point along either the x, y or z axis. By default, ros rvis points along x axis
+    if arrow_direction == 'x':
+        color = (1, 0, 0, 1)
+        pass
+    elif arrow_direction == 'y':
+        color = (0, 1, 0, 1)
+        final_marker_pose.M.DoRotZ(math.pi / 2)
+    elif arrow_direction == 'z':
+        color = (0, 0, 1, 1)
+        final_marker_pose.M.DoRotY(-math.pi / 2)
+    else:
+        print "Invalid arrow direction, using default x "
+
     m = visualization_msgs.msg.Marker()
     m.id = m_id
     m.type = m_type
 
     m.header.frame_id = frame_id
     m.header.stamp = rospy.Time.now()
-    m.pose = pose
+    m.pose = tf_conversions.toMsg(final_marker_pose)
 
     m.color = std_msgs.msg.ColorRGBA(*color)
     m.scale = Vector3(*scale)
@@ -78,16 +89,7 @@ def get_marker_array(data_np, frame_id="object_0", arrow_direction='x'):
             # if count % 25 == 0:
             idx, x, y, z, roll, pitch, yaw, is_reachable = data
 
-            rotation = PyKDL.Rotation.RPY(roll, pitch, yaw)
-            if arrow_direction == 'x':
-                pass
-            elif arrow_direction == 'y':
-                rotation.DoRotZ(math.pi / 2)
-            elif arrow_direction == 'z':
-                rotation.DoRotY(-math.pi / 2)
-            else:
-                print "Invalid arrow direction, using default x "
-
+            rotation = tf_conversions.Rotation.RPY(roll, pitch, yaw)
             quarternion = rotation.GetQuaternion()
             p = Pose(Point(x, y, z), Quaternion(*quarternion))
 
@@ -98,7 +100,7 @@ def get_marker_array(data_np, frame_id="object_0", arrow_direction='x'):
                 # continue
                 color = (1, 0, 0, 1)
 
-            marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
+            marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color, arrow_direction=arrow_direction)
             ma.markers.append(marker)
 
     return ma
@@ -202,7 +204,7 @@ def display_sdf_space_data(sdf_data, marker_topic="marker_topic"):
             continue
 
         if is_6d_space:
-            rot = PyKDL.Rotation.RPY(data[4], data[5], data[6])
+            rot = tf_conversions.Rotation.RPY(data[4], data[5], data[6])
             quarternion = rot.GetQuaternion()
         else:
             quarternion = (0, 0, 0, 1)
@@ -238,17 +240,24 @@ def display_grasps_approach(grasps, energies=None, marker_topic="marker_topic", 
             b = (energies[count] - np.min(energies)) / (np.max(energies) - np.min(energies))
             color = (1 - b, 0, b, 1)
 
-        # fix to align Barrett hand approach_tran to line up with x axis
+        # # fix to align Barrett hand approach_tran to line up with x axis
+        # if grasp.approach_direction.vector.z == 1.0:
+        #     q_array_func = lambda p: np.array([p.x, p.y, p.z, p.w])
+        #     q_orig = q_array_func(grasp.pose.orientation)
+        #     rot = tf_conversions.Rotation.Quaternion(*q_orig)
+        #     rot.DoRotY(-math.pi / 2)
+        #     rot.DoRotX(math.pi)
+        #     grasp.pose.orientation = Quaternion(*rot.GetQuaternion())
+        #
+        # marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
         if grasp.approach_direction.vector.z == 1.0:
-            q_array_func = lambda p: np.array([p.x, p.y, p.z, p.w])
-            q_orig = q_array_func(grasp.pose.orientation)
-            rot = PyKDL.Rotation.Quaternion(*q_orig)
-            rot.DoRotY(-math.pi / 2)
-            rot.DoRotX(math.pi)
-            grasp.pose.orientation = Quaternion(*rot.GetQuaternion())
-
-        marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
-        ma.markers.append(marker)
+            # marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color, arrow_direction='z')
+            ma.markers.append(make_marker(m_id=count, pose=p, frame_id=frame_id, color=color, arrow_direction='x'))
+            ma.markers.append(make_marker(m_id=count+1000, pose=p, frame_id=frame_id, color=color, arrow_direction='y'))
+            ma.markers.append(make_marker(m_id=count+2000, pose=p, frame_id=frame_id, color=color, arrow_direction='z'))
+        else:
+            marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
+        # ma.markers.append(marker)
 
     rospy.sleep(1)
     publisher.publish(ma)
