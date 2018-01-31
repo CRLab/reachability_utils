@@ -14,13 +14,10 @@ def make_marker(m_id, pose, frame_id="base_link", color=(1, 0, 0, 1), scale=(.1,
     final_marker_pose = tf_conversions.fromMsg(pose)
     # For a given pose, the marker can point along either the x, y or z axis. By default, ros rvis points along x axis
     if arrow_direction == 'x':
-        color = (1, 0, 0, 1)
         pass
     elif arrow_direction == 'y':
-        color = (0, 1, 0, 1)
         final_marker_pose.M.DoRotZ(math.pi / 2)
     elif arrow_direction == 'z':
-        color = (0, 0, 1, 1)
         final_marker_pose.M.DoRotY(-math.pi / 2)
     else:
         print "Invalid arrow direction, using default x "
@@ -251,13 +248,10 @@ def display_grasps_approach(grasps, energies=None, marker_topic="marker_topic", 
         #
         # marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
         if grasp.approach_direction.vector.z == 1.0:
-            # marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color, arrow_direction='z')
-            ma.markers.append(make_marker(m_id=count, pose=p, frame_id=frame_id, color=color, arrow_direction='x'))
-            ma.markers.append(make_marker(m_id=count+1000, pose=p, frame_id=frame_id, color=color, arrow_direction='y'))
-            ma.markers.append(make_marker(m_id=count+2000, pose=p, frame_id=frame_id, color=color, arrow_direction='z'))
+            marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color, arrow_direction='z')
         else:
             marker = make_marker(m_id=count, pose=p, frame_id=frame_id, color=color)
-        # ma.markers.append(marker)
+        ma.markers.append(marker)
 
     rospy.sleep(1)
     publisher.publish(ma)
