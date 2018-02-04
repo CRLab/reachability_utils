@@ -1,0 +1,15 @@
+
+#downsample_steps_options: [[2, 2, 2, 1, 2, 2]]
+downsample_steps_options: [[1, 1, 1, 1, 1, 1],
+                           [2, 2, 2, 1, 1, 1],
+                           [3, 3, 3, 1, 1, 1],
+                           [1, 1, 1, 1, 2, 2],
+                           [2, 2, 2, 1, 2, 2],
+                           [3, 3, 3, 1, 2, 2],
+                           [1, 1, 1, 1, 3, 3],
+                           [2, 2, 2, 1, 3, 3],
+                           [3, 3, 3, 1, 3, 3]]
+
+dense_reachability_space_dir: fetch_dense_reachability24_44_40_2_16_16
+
+query_pose_data_file_name: random_reachability_query_data_y18_m02_d03_h16_m57_s30.csv
