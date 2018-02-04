@@ -1,0 +1,7 @@
+
+
+original_reachability_space_dir_path: /home/iakinola/wrkspc/Spring2018/reachability_planning_ws/src/fetch_reachability_config/data
+
+obstacle_info_dir: /home/iakinola/wrkspc/Spring2018/reachability_planning_ws/src/reachability_experiments_mongo/src/reachability_experiments_mongo
+obstacle_info_filename: upload_tasks.yaml
+use_binvox: False
