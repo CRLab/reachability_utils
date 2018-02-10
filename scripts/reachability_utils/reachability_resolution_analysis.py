@@ -10,6 +10,7 @@ import yaml
 
 from process_reachability_data_from_csv import load_reachability_data_from_dir, generate_SDF_from_binary_space
 
+
 # create 6D reachability space from csv
 
 # create SDF
@@ -44,7 +45,6 @@ def downsample_steps_binary_reachability_space(binary_reachability_space, mins, 
 
 
 def interpolate_pose_in_reachability_space_grid(reachability_space_grid, mins, step_size, dims, query_pose):
-
     ndims = dims.size
     num_bins_from_origin = np.zeros(ndims, dtype=float)
     num_corners = 1 << ndims
@@ -66,11 +66,11 @@ def interpolate_pose_in_reachability_space_grid(reachability_space_grid, mins, s
         weight_per_dim = np.zeros(ndims)
         index_per_dim = np.zeros(ndims, dtype=int)
         for dim in range(ndims):
-            is_after = (i >> dim) & 1       # 000100
-            dist_to_corner = num_bins_from_origin[dim] - int(num_bins_from_origin[dim])       # value between 0 and 1.
+            is_after = (i >> dim) & 1  # 000100
+            dist_to_corner = num_bins_from_origin[dim] - int(num_bins_from_origin[dim])  # value between 0 and 1.
 
             weight_per_dim[dim] = ((1.0 - is_after) * (1.0 - dist_to_corner) + (is_after) * (dist_to_corner))
-            index_per_dim[dim] = min(int(num_bins_from_origin[dim]) + is_after, dims[dim]-1)
+            index_per_dim[dim] = min(int(num_bins_from_origin[dim]) + is_after, dims[dim] - 1)
 
         weight = weight_per_dim.prod()
         corner_weights[i] = weight
@@ -84,7 +84,6 @@ def interpolate_pose_in_reachability_space_grid(reachability_space_grid, mins, s
 
 
 def get_reachability_fitness_score(reachability_space_grid, mins, step_size, dims, query_poses):
-
     reachability_prediction = np.zeros(shape=(query_poses.shape[0]), dtype=bool)
 
     for i, query in enumerate(query_poses):
@@ -99,7 +98,8 @@ def get_reachability_fitness_score(reachability_space_grid, mins, step_size, dim
     ground_truth = query_poses[:, -1]
     fitness = {}
     fitness['true_positive'] = np.sum(np.logical_and(reachability_prediction, ground_truth)) * 1. / np.sum(ground_truth)
-    fitness['true_negative'] = np.sum(np.logical_and(1 - reachability_prediction, 1-ground_truth)) * 1. / np.sum(1-ground_truth)
+    fitness['true_negative'] = np.sum(np.logical_and(1 - reachability_prediction, 1 - ground_truth)) * 1. / np.sum(
+        1 - ground_truth)
     fitness['false_positive'] = 1 - fitness['true_positive']
     fitness['false_negative'] = 1 - fitness['true_negative']
     fitness['accuracy'] = 1 - np.mean(np.logical_xor(reachability_prediction, ground_truth.astype(bool)))
@@ -137,6 +137,7 @@ if __name__ == "__main__":
     data = pandas.read_csv(args.query_pose_data_file_path, header=None, delimiter=' ')
     query_poses_data = data.values
 
+    resolution_analysis_result = []
     for downsample_steps in args.downsample_steps_options:
         space_gen_stats = {}
 
@@ -144,23 +145,33 @@ if __name__ == "__main__":
             binary_reachability_space,
             mins, step_size, dims, downsample_steps)
         binary_reachability_space_downsampled, mins, step_size_downsampled, dims_downsampled = downsampled_space_data
-
-        # generate SDF
-        t0 = time.time()
-        sdf_reachability_space_downsampled = generate_SDF_from_binary_space(binary_reachability_space_downsampled)
-        t1 = time.time()
-        print "creating sdf took\t {} secs".format(t1 - t0)
-        space_gen_stats['sdf_generation_time'] = (t1 - t0)
-
-        # get reachability test score
-        fitness_stats = get_reachability_fitness_score(sdf_reachability_space_downsampled,
-                                                       mins, step_size_downsampled, dims_downsampled, query_poses_data)
-
-        print "\nstep_size: \t{} \n {}".format(step_size_downsampled, fitness_stats)
-        space_gen_stats.update(fitness_stats)
         space_gen_stats['mins'] = mins
         space_gen_stats['step_size'] = step_size_downsampled
         space_gen_stats['dims'] = dims_downsampled
+        space_gen_stats['downsample_steps'] = downsample_steps
+
+        for m, ratio in enumerate(args.rpy_to_xyz_metric_ratios):
+            # generate SDF
+            t0 = time.time()
+            sdf_reachability_space_downsampled = generate_SDF_from_binary_space(binary_reachability_space_downsampled,
+                                                                                dx=[1, 1, 1, ratio, ratio, ratio])
+            t1 = time.time()
+            print "creating sdf took\t {} secs".format(t1 - t0)
+            space_gen_stats['sdf_generation_time'] = (t1 - t0)
+
+            # get reachability test score
+            fitness_stats = get_reachability_fitness_score(sdf_reachability_space_downsampled,
+                                                           mins, step_size_downsampled, dims_downsampled,
+                                                           query_poses_data)
+            fitness_stats['rpy_to_xyz_metric_weight'] = ratio
+
+            print "downsample_steps: \t{} \nstep_size: \t{} \nxyz_to_rpy_metric_weight: \t{} \n {} \n".format(
+                downsample_steps,
+                step_size_downsampled,
+                ratio,
+                fitness_stats)
+            space_gen_stats[m] = fitness_stats
+        resolution_analysis_result.append(space_gen_stats)
     import IPython
 
     IPython.embed()
